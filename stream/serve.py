@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Serve the HLS watch page + stream segments. No dependencies."""
 import functools
 import http.server
 import os
