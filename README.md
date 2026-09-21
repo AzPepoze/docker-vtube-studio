@@ -59,7 +59,7 @@ docker compose --profile vnc stop vnc
 
 ## Knobs (all optional, via `.env` or inline `KEY=value`)
 
-- `STREAM_FPS=15` — watch page frames per second. Lower = less CPU.
+- `STREAM_FPS=60` — watch page frames per second. Lower = less CPU.
 - `SCREEN_GEOM=640x360x24` — virtual screen size. Smaller = much less CPU.
 - `LP_NUM_THREADS=4` — cap software-rendering threads.
 - `PUBLIC_HOST=localhost` — host name used in the clickable log links.

@@ -17,10 +17,14 @@ mkdir -p "$HOME/.config/openbox"
 echo "[boot] starting virtual display ${DISPLAY:-:99}..."
 SCREEN_GEOM="${SCREEN_GEOM:-640x360x24}"
 SCREEN_SIZE="${SCREEN_GEOM%x*}"
-Xvfb "${DISPLAY:-:99}" -screen 0 "$SCREEN_GEOM" </dev/null &
+SOCK="/tmp/.X11-unix/X${DISPLAY#:}"
+Xvfb "${DISPLAY:-:99}" -screen 0 "$SCREEN_GEOM" </dev/null >/dev/null 2>&1 &
 PIDS="$PIDS $!"
-openbox </dev/null 2>/dev/null &
+openbox </dev/null >/dev/null 2>&1 &
 PIDS="$PIDS $!"
+for _ in $(seq 1 20); do [ -S "$SOCK" ] && break; sleep 0.5; done
+[ -S "$SOCK" ] || { echo "[boot] virtual display failed to start"; exit 1; }
+echo "[boot] display ready (${SCREEN_GEOM})."
 
 if /usr/local/bin/install-vts.sh; then
 
@@ -39,12 +43,12 @@ except Exception as e:
     print(f"[boot] WARNING: could not enable VTS API in config: {e}")
 EOF
   if [ "${ENABLE_STREAM:-1}" = "1" ]; then
-    echo "[boot] watch page on :${STREAM_PORT:-8080}"
     STREAM_DIR="${STREAM_DIR:-/srv/stream}" STREAM_PORT="${STREAM_PORT:-8080}" /usr/local/bin/serve.py </dev/null &
     PIDS="$PIDS $!"
     mkdir -p "${STREAM_DIR:-/srv/stream}"
-    ffmpeg -hide_banner -loglevel warning \
-      -f x11grab -video_size "${SCREEN_SIZE:-640x360}" -framerate "${STREAM_FPS:-15}" -i "${DISPLAY:-:99}" \
+    echo "[boot] stream on (${STREAM_FPS:-60} fps)."
+    ffmpeg -hide_banner -loglevel error \
+      -f x11grab -video_size "${SCREEN_SIZE:-640x360}" -framerate "${STREAM_FPS:-60}" -i "${DISPLAY:-:99}" \
       -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -g 30 \
       -hls_time 2 -hls_list_size 6 -hls_flags delete_segments \
       -hls_segment_filename "${STREAM_DIR:-/srv/stream}/seg%03d.ts" \
@@ -55,16 +59,19 @@ EOF
   fi
 
   VTS_EXE="$(cat "${EXE_CACHE:-$(dirname "${VTS_DIR:-/data/vts}")/.vts-exe}")"
-  echo "[boot] launching VTube Studio: $VTS_EXE"
+  echo "[boot] launching VTube Studio."
+  echo "--------------------------------------------------"
   echo "[vts] ready:"
   echo "[vts]   API:   ws://${PUBLIC_HOST:-localhost}:${HOST_VTS_PORT:-8001}"
   echo "[vts]   Watch: http://${PUBLIC_HOST:-localhost}:${HOST_STREAM_PORT:-8090}"
   echo "[vts]   VNC:   http://${PUBLIC_HOST:-localhost}:6080/vnc.html (needs: docker compose --profile vnc up -d)"
+  echo "--------------------------------------------------"
   export STEAM_COMPAT_DATA_PATH="${WINEPREFIX:-/data/prefix}"
   export STEAM_COMPAT_CLIENT_INSTALL_PATH="${STEAM_COMPAT_CLIENT_INSTALL_PATH:-/opt/steamcmd}"
   mkdir -p "$STEAM_COMPAT_DATA_PATH"
 
-  "${PROTONPATH:?PROTONPATH not set}/proton" run "$VTS_EXE" -nosteam &
+  NOISE="ALSA lib|ProtonFixes.*Skipping fix execution|not enough frames to estimate rate|Failed to open /etc/machine-id|Openbox-Message|setlocale.*failed|UpdateUI: skip show logo"
+  "${PROTONPATH:?PROTONPATH not set}/proton" run "$VTS_EXE" -nosteam 2> >(grep -v -E "$NOISE" >&2) &
   PROTON_PID=$!
   PIDS="$PIDS $PROTON_PID"
   wait "$PROTON_PID"
