@@ -54,7 +54,7 @@ EOF
     PIDS="$PIDS $!"
     mkdir -p "${STREAM_DIR:-/srv/stream}"
     ffmpeg -hide_banner -loglevel warning \
-      -f x11grab -video_size "${SCREEN_SIZE:-640x360}" -framerate 15 -i "${DISPLAY:-:99}" \
+      -f x11grab -video_size "${SCREEN_SIZE:-640x360}" -framerate "${STREAM_FPS:-15}" -i "${DISPLAY:-:99}" \
       -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -g 30 \
       -hls_time 2 -hls_list_size 6 -hls_flags delete_segments \
       -hls_segment_filename "${STREAM_DIR:-/srv/stream}/seg%03d.ts" \
@@ -66,6 +66,10 @@ EOF
 
   VTS_EXE="$(cat "${EXE_CACHE:-$(dirname "${VTS_DIR:-/data/vts}")/.vts-exe}")"
   echo "[boot] launching VTube Studio: $VTS_EXE"
+  echo "[vts] ready:"
+  echo "[vts]   API:   ws://${PUBLIC_HOST:-localhost}:${HOST_VTS_PORT:-8001}"
+  echo "[vts]   Watch: http://${PUBLIC_HOST:-localhost}:${HOST_STREAM_PORT:-8090}"
+  echo "[vts]   VNC:   http://${PUBLIC_HOST:-localhost}:6080/vnc.html (needs: docker compose --profile vnc up -d)"
   export STEAM_COMPAT_DATA_PATH="${WINEPREFIX:-/data/prefix}"
   export STEAM_COMPAT_CLIENT_INSTALL_PATH="${STEAM_COMPAT_CLIENT_INSTALL_PATH:-/opt/steamcmd}"
   mkdir -p "$STEAM_COMPAT_DATA_PATH"

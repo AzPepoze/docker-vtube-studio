@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# One-time setup bridge: attach VNC + browser to the main container's screen
-# (shared via /tmp/.X11-unix) so you can log into Steam and click "Allow"
-# for MapleAI. Runs in the `setup` container, used once, then removed.
-# Usage: docker compose -f compose.yml -f compose.setup.yml --profile setup up setup
+# Browser remote control for the main container's VTS desktop (shared via
+# /tmp/.X11-unix + network/IPC namespaces). Enabled with:
+#   docker compose --profile vnc up -d
+# Open the printed link, click what you need, then stop it:
+#   docker compose --profile vnc stop vnc
 set -euo pipefail
 
 PIDS=""
@@ -21,5 +22,5 @@ PIDS="$PIDS $!"
 websockify --web /opt/novnc 6080 localhost:5900 </dev/null &
 PIDS="$PIDS $!"
 
-echo "[setup] browser access on :6080 — close this container when done."
+echo "[vnc] remote control: http://${PUBLIC_HOST:-localhost}:6080/vnc.html"
 wait

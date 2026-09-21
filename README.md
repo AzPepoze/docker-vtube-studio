@@ -34,25 +34,36 @@ Maple (the AI VTuber project next door) talks to this container to drive the ava
    docker compose restart
    ```
 
-   Open `http://your-server:8080` in any browser. That's the URL you share.
+   Open `http://your-server:8090` in any browser. That's the URL you share.
+   (Host port `8090` — `8080` belongs to llamacpp on this box. Change it
+   with `STREAM_PORT` if you like.)
    All later runs need no input — just `docker compose up -d`.
 
    (If you'd rather use a file: `cp .env.example .env`, `chmod 600 .env`,
    fill in the blanks, then `docker compose up --build` attached. Never commit `.env`.)
 
-## One-time setup (first run only)
+## Remote control (clicks)
 
-One click needs a browser inside the container (Steam login is already done
-via step 2 above). Run this once:
+The watch page is view-only. When VTS needs a click (first-run popup,
+loading a model, the "Allow MapleAI" approval), add the VNC sidecar:
 
 ```bash
-docker compose -f compose.yml -f compose.setup.yml --profile setup up setup
+docker compose --profile vnc up -d
 ```
 
-Open `http://your-server:6080` and: start VTube Studio, load your model,
-turn tracking OFF. When Maple first connects and VTube Studio asks to allow
-"MapleAI", click Allow. Then stop the setup container with Ctrl-C — you never
-run it again. The watch page on `:8080` is how you look at it from now on.
+The logs print a clickable link — open it, click what you need, then stop it:
+
+```bash
+docker compose --profile vnc stop vnc
+```
+
+## Knobs (all optional, via `.env` or inline `KEY=value`)
+
+- `STREAM_FPS=15` — watch page frames per second. Lower = less CPU.
+- `SCREEN_GEOM=640x360x24` — virtual screen size. Smaller = much less CPU.
+- `LP_NUM_THREADS=4` — cap software-rendering threads.
+- `PUBLIC_HOST=localhost` — host name used in the clickable log links.
+  Set your LAN IP or domain if your browser is on another machine.
 
 ## Everyday use
 
@@ -75,9 +86,8 @@ docker compose restart
 ## What's inside
 
 - `Dockerfile` — small Debian + SteamCMD + Proton + virtual screen + video stream.
-- `compose.yml` — ports (`8001` API, `8080` watch page) and the data volume.
-- `compose.setup.yml` — the one-time setup browser. Not used day to day.
-- `scripts/` — start script and installer.
+- `compose.yml` — ports (`8001` API, `8090` watch page, `6080` remote control) and the data volume. Add `--profile vnc` for the clickable remote control.
+- `scripts/` — start script, installer, and the VNC bridge.
 - `stream/` — the watch page and its tiny web server.
 - All heavy stuff (Steam login, game files, models, Proton) lives in a Docker
   volume, not in the image — so the image stays small and pulls stay fast.
@@ -90,7 +100,7 @@ docker compose restart
 - **Steam Guard code asked, then fails?** Codes expire in ~30 seconds. Run step 2
   again and be quick — or put a fresh code in `STEAM_GUARD` in `.env` and restart.
 - **First start is slow?** Normal. Proton warms up for a few minutes, then it's fine.
-- **Watch page says "open stream.m3u8 in VLC"?** Your browser needs internet for the player library, or just open `http://your-server:8080/stream.m3u8` directly in VLC.
+- **Watch page says "open stream.m3u8 in VLC"?** Your browser needs internet for the player library, or just open `http://your-server:8090/stream.m3u8` directly in VLC.
 - **Forgot what's running?** `docker compose ps` and `docker compose logs -f`.
 
 ## Known limits

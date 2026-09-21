@@ -68,14 +68,14 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=120s \
 
 ENTRYPOINT ["entrypoint.sh"]
 
-# --- one-time setup target: temporary browser access for Steam login +
-# --- clicking "Allow" for MapleAI. Used once via compose.setup.yml, then removed.
-FROM vts AS setup
+# --- vnc target: browser remote control for the main container's display.
+# Run it with: docker compose --profile vnc up -d (only when you need clicks).
+FROM vts AS vnc
 RUN apt-get update \
  && apt-get install -y --no-install-recommends x11vnc websockify \
  && rm -rf /var/lib/apt/lists/*
 COPY --from=novnc /opt/novnc /opt/novnc
-COPY scripts/setup-vnc.sh /usr/local/bin/setup-vnc.sh
-RUN chmod +x /usr/local/bin/setup-vnc.sh
+COPY scripts/vnc-bridge.sh /usr/local/bin/vnc-bridge.sh
+RUN chmod +x /usr/local/bin/vnc-bridge.sh
 EXPOSE 6080 5900
-CMD ["setup-vnc.sh"]
+CMD ["vnc-bridge.sh"]

@@ -11,17 +11,26 @@ services:
       # host side can move; inside the container VTS always listens on 8001
       - "${VTS_PORT:-8001}:8001"
       # watch page: paste this URL in any browser to see the avatar
-      - "${STREAM_PORT:-8080}:8080"
+      # (host default 8090 — 8080 belongs to llamacpp here)
+      - "${STREAM_PORT:-8090}:8080"
+      # remote control page (only served when the vnc profile is up)
+      - "6080:6080"
     env_file:
       - path: .env
         required: false
+    environment:
+      # host name printed in the clickable log links (use LAN IP/DNS for remote browsers)
+      PUBLIC_HOST: ${PUBLIC_HOST:-localhost}
+      # host-side ports as published below (container side is fixed)
+      HOST_VTS_PORT: ${VTS_PORT:-8001}
+      HOST_STREAM_PORT: ${STREAM_PORT:-8090}
     volumes:
       - vts-data:/data
-      # shared X display socket (lets the one-time setup container peek in)
+      # shared X display socket (lets the vnc profile peek in)
       - x11:/tmp/.X11-unix
     stdin_open: true
     tty: true
-    # allow the one-time setup container to share this display (MIT-SHM)
+    # allow the vnc profile to share this display (MIT-SHM)
     ipc: shareable
     restart: unless-stopped
     healthcheck:
@@ -30,6 +39,33 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
+
+  # Browser remote control (clicks) for the VTS desktop.
+  # Off by default — enable with: docker compose --profile vnc up -d
+  vnc:
+    build:
+      context: .
+      target: vnc
+    # NOTE: the image inherits ENTRYPOINT ["entrypoint.sh"] from the vts
+    # stage — override it, this container only bridges VNC to the main
+    # container's display (shared via the x11 volume + namespaces).
+    entrypoint: ["/usr/local/bin/vnc-bridge.sh"]
+    network_mode: "service:vts"
+    # x11vnc uses MIT-SHM against Xvfb: shared memory can't cross the default
+    # IPC isolation, so share the main container's IPC namespace too.
+    ipc: service:vts
+    depends_on:
+      - vts
+    volumes:
+      - x11:/tmp/.X11-unix
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:-localhost}
+    profiles:
+      - vnc
+    restart: unless-stopped
 
 volumes:
   vts-data:
