@@ -18,6 +18,9 @@ services:
     # container's display (shared via the x11 volume + network namespace).
     entrypoint: ["/usr/local/bin/setup-vnc.sh"]
     network_mode: "service:vts"
+    # x11vnc uses MIT-SHM against Xvfb: shared memory can't cross the default
+    # IPC isolation, so share the main container's IPC namespace too.
+    ipc: service:vts
     depends_on:
       - vts
     volumes:
