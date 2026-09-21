@@ -29,6 +29,25 @@ openbox </dev/null 2>/dev/null &
 PIDS="$PIDS $!"
 
 if /usr/local/bin/install-vts.sh; then
+
+# Guarantee the VTS API server is on: fresh installs ship Config_StartAPI=false,
+# which means nothing answers on port 8001. Enforce every boot (idempotent).
+# Also cap llvmpipe render threads: without a GPU, VTS will happily eat every
+# core via software rendering. Override with LP_NUM_THREADS if you want more.
+export LP_NUM_THREADS="${LP_NUM_THREADS:-4}"
+python3 - "$VTS_DIR" <<'EOF'
+import json, sys
+p = sys.argv[1] + "/VTube Studio_Data/StreamingAssets/Config/vts_config.json"
+try:
+    d = json.load(open(p))
+    for it in d.get("BoolData", []):
+        if it.get("Key") == "Config_StartAPI":
+            it["Value"] = True
+    json.dump(d, open(p, "w"), indent=4)
+    print("[boot] VTS API server enabled (Config_StartAPI=true).")
+except Exception as e:
+    print(f"[boot] WARNING: could not enable VTS API in config: {e}")
+EOF
   if [ "${ENABLE_STREAM:-1}" = "1" ]; then
     echo "[boot] watch page on :${STREAM_PORT:-8080}"
     STREAM_DIR="${STREAM_DIR:-/srv/stream}" STREAM_PORT="${STREAM_PORT:-8080}" /usr/local/bin/serve.py </dev/null &
