@@ -12,22 +12,33 @@ Maple (the AI VTuber project next door) talks to this container to drive the ava
 
 ## Quick start
 
-1. Start it attached (so it can ask you things on the first run):
+1. Start it (no typing needed):
 
    ```bash
-   docker compose up --build
+   docker compose up -d --build
    ```
 
-   On the first run it asks for your Steam username + password **in the
-   terminal** — typed, never written to any file. If Steam wants a Guard
-   code, it asks for that too. Steam then remembers the login inside the
-   container's private volume, so all later runs need no input — just
-   `docker compose up -d`.
+2. Log into Steam once, inside the container:
+
+   ```bash
+   docker exec -it vtube-studio install-vts.sh
+   ```
+
+   It asks for your Steam username + password **in the terminal** — typed,
+   never written to any file. If Steam wants a Guard code, it asks for that
+   too. Steam then remembers the login inside the container's private volume.
+
+3. Restart so it boots fully, then watch it:
+
+   ```bash
+   docker compose restart
+   ```
+
+   Open `http://your-server:8080` in any browser. That's the URL you share.
+   All later runs need no input — just `docker compose up -d`.
 
    (If you'd rather use a file: `cp .env.example .env`, `chmod 600 .env`,
-   fill in the blanks. Never commit `.env`.)
-
-2. Watch it: open `http://your-server:8080` in any browser. That's the URL you share.
+   fill in the blanks, then `docker compose up --build` attached. Never commit `.env`.)
 
 ## One-time setup (first run only)
 
