@@ -50,6 +50,8 @@ RUN dpkg --add-architecture i386 \
  && mkdir -p /opt/protons \
  && curl -fsSL "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/${GE_PROTON_VERSION}/${GE_PROTON_VERSION}-x86_64.tar.gz" \
   | tar -xz -C /opt/protons \
+ && mv "/opt/protons/${GE_PROTON_VERSION}-x86_64" "/opt/protons/${GE_PROTON_VERSION}" \
+ && test -x "/opt/protons/${GE_PROTON_VERSION}/proton" \
  && mkdir -p /data "$HOME" /srv/stream /tmp/.X11-unix
 
 COPY scripts/entrypoint.sh scripts/install-vts.sh /usr/local/bin/
