@@ -58,13 +58,24 @@ EOF
     echo "[boot] stream disabled (ENABLE_STREAM=0)"
   fi
 
+  if [ "${ENABLE_VNC:-1}" = "1" ]; then
+    if [ -n "${VNC_PASSWORD:-}" ]; then
+      x11vnc -display "${DISPLAY:-:99}" -forever -shared -rfbport 5900 -passwd "$VNC_PASSWORD" </dev/null >/dev/null 2>&1 &
+    else
+      x11vnc -display "${DISPLAY:-:99}" -forever -shared -rfbport 5900 </dev/null >/dev/null 2>&1 &
+    fi
+    PIDS="$PIDS $!"
+    websockify --web /opt/novnc 6080 localhost:5900 </dev/null >/dev/null 2>&1 &
+    PIDS="$PIDS $!"
+  fi
+
   VTS_EXE="$(cat "${EXE_CACHE:-$(dirname "${VTS_DIR:-/data/vts}")/.vts-exe}")"
   echo "[boot] launching VTube Studio."
   echo "--------------------------------------------------"
   echo "[vts] ready:"
   echo "[vts]   API:   ws://${PUBLIC_HOST:-localhost}:${HOST_VTS_PORT:-8001}"
   echo "[vts]   Watch: http://${PUBLIC_HOST:-localhost}:${HOST_STREAM_PORT:-8090}"
-  echo "[vts]   VNC:   http://${PUBLIC_HOST:-localhost}:6080/vnc.html (needs: docker compose --profile vnc up -d)"
+  echo "[vts]   VNC:   http://${PUBLIC_HOST:-localhost}:6080/vnc.html"
   echo "--------------------------------------------------"
   export STEAM_COMPAT_DATA_PATH="${WINEPREFIX:-/data/prefix}"
   export STEAM_COMPAT_CLIENT_INSTALL_PATH="${STEAM_COMPAT_CLIENT_INSTALL_PATH:-/opt/steamcmd}"

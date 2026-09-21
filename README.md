@@ -44,18 +44,10 @@ Maple (the AI VTuber project next door) talks to this container to drive the ava
 
 ## Remote control (clicks)
 
-The watch page is view-only. When VTS needs a click (first-run popup,
-loading a model, the "Allow MapleAI" approval), add the VNC sidecar:
-
-```bash
-docker compose --profile vnc up -d
-```
-
-The logs print a clickable link — open it, click what you need, then stop it:
-
-```bash
-docker compose --profile vnc stop vnc
-```
+The watch page is view-only. The same container also serves a remote
+desktop in your browser — open the `VNC:` link from the logs
+(`http://your-server:6080/vnc.html`), click what you need, done.
+Set `VNC_PASSWORD` to lock it, `ENABLE_VNC=0` to turn it off.
 
 ## Knobs (all optional, via `.env` or inline `KEY=value`)
 
@@ -86,7 +78,7 @@ docker compose restart
 ## What's inside
 
 - `Dockerfile` — small Debian + SteamCMD + Proton + virtual screen + video stream.
-- `compose.yml` — ports (`8001` API, `8090` watch page, `6080` remote control) and the data volume. Add `--profile vnc` for the clickable remote control.
+- `compose.yml` — ports (`8001` API, `8090` watch page, `6080` remote control) and the data volume.
 - `scripts/` — start script, installer, and the VNC bridge.
 - `stream/` — the watch page and its tiny web server.
 - All heavy stuff (Steam login, game files, models, Proton) lives in a Docker

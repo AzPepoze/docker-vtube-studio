@@ -24,7 +24,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     VTS_DIR=/data/vts \
     ENABLE_STREAM=1 \
     STREAM_PORT=8080 \
-    STREAM_DIR=/srv/stream
+    STREAM_DIR=/srv/stream \
+    ENABLE_VNC=1
 
 RUN dpkg --add-architecture i386 \
  && apt-get update \
@@ -34,6 +35,7 @@ RUN dpkg --add-architecture i386 \
     xvfb openbox \
     python3 \
     ffmpeg \
+    x11vnc websockify \
     mesa-vulkan-drivers libgl1 libegl1 \
  && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /opt/steamcmd \
@@ -47,25 +49,16 @@ RUN dpkg --add-architecture i386 \
  && test -x "/opt/protons/${GE_PROTON_VERSION}/proton" \
  && mkdir -p /data "$HOME" /srv/stream /tmp/.X11-unix
 
+COPY --from=novnc /opt/novnc /opt/novnc
 COPY scripts/entrypoint.sh scripts/install-vts.sh /usr/local/bin/
 COPY stream/serve.py /usr/local/bin/serve.py
 COPY stream/www/ /srv/stream/
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/install-vts.sh /usr/local/bin/serve.py
 
-EXPOSE 8001 8080
+EXPOSE 8001 8080 6080 5900
 VOLUME /data
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=120s \
   CMD timeout 5 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/8001' || exit 1
 
 ENTRYPOINT ["entrypoint.sh"]
-
-FROM vts AS vnc
-RUN apt-get update \
- && apt-get install -y --no-install-recommends x11vnc websockify \
- && rm -rf /var/lib/apt/lists/*
-COPY --from=novnc /opt/novnc /opt/novnc
-COPY scripts/vnc-bridge.sh /usr/local/bin/vnc-bridge.sh
-RUN chmod +x /usr/local/bin/vnc-bridge.sh
-EXPOSE 6080 5900
-CMD ["vnc-bridge.sh"]
