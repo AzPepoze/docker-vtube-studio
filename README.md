@@ -42,14 +42,14 @@ Maple (the AI VTuber project next door) talks to this container to drive the ava
 
 ## One-time setup (first run only)
 
-Steam login and one click need a browser inside the container. Run this once:
+One click needs a browser inside the container (Steam login is already done
+via step 2 above). Run this once:
 
 ```bash
 docker compose -f compose.yml -f compose.setup.yml --profile setup up setup
 ```
 
-Open `http://your-server:6080` and: log into Steam (put a Guard code in `.env`
-as `STEAM_GUARD` if asked, then restart), start VTube Studio, load your model,
+Open `http://your-server:6080` and: start VTube Studio, load your model,
 turn tracking OFF. When Maple first connects and VTube Studio asks to allow
 "MapleAI", click Allow. Then stop the setup container with Ctrl-C — you never
 run it again. The watch page on `:8080` is how you look at it from now on.
@@ -76,7 +76,11 @@ VTube Studio updates itself on each start. The Docker image itself rarely needs 
 
 ## Troubleshooting
 
-- **Steam Guard code asked, then fails?** Put the code in `STEAM_GUARD` in `.env` and run `docker compose up -d` again. Codes expire fast, be quick.
+- **Container logs say "install needs your Steam login", health shows unhealthy?**
+  Normal before the first login — the container is parked, waiting. Do Quick
+  start step 2 (`docker exec -it ...`), then `docker compose restart`.
+- **Steam Guard code asked, then fails?** Codes expire in ~30 seconds. Run step 2
+  again and be quick — or put a fresh code in `STEAM_GUARD` in `.env` and restart.
 - **First start is slow?** Normal. Proton warms up for a few minutes, then it's fine.
 - **Watch page says "open stream.m3u8 in VLC"?** Your browser needs internet for the player library, or just open `http://your-server:8080/stream.m3u8` directly in VLC.
 - **Forgot what's running?** `docker compose ps` and `docker compose logs -f`.
