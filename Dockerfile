@@ -5,6 +5,7 @@
 # Game data lives on /data (a volume), NOT in the image.
 
 ARG DEBIAN_CODENAME=trixie
+ARG GE_PROTON_VERSION=GE-Proton11-7
 
 # --- noVNC web client (setup target only, pinned) ---
 FROM debian:${DEBIAN_CODENAME}-slim AS novnc
@@ -19,13 +20,14 @@ RUN apt-get update \
 # --- main runtime: VTS + HLS watch page ---
 FROM debian:${DEBIAN_CODENAME}-slim AS vts
 ARG STEAMCMD_URL=https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
+ARG GE_PROTON_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     HOME=/data/home \
     DISPLAY=:99 \
-    GAMEID=umu-1325860 \
-    PROTON_VERB=waitforexitandrun \
+    PROTONPATH=/opt/protons/${GE_PROTON_VERSION} \
+    WINEPREFIX=/data/prefix \
     VTS_DIR=/data/vts \
     ENABLE_STREAM=1 \
     STREAM_PORT=8080 \
@@ -41,10 +43,12 @@ RUN dpkg --add-architecture i386 \
     ffmpeg \
     mesa-vulkan-drivers libgl1 libegl1 \
  && rm -rf /var/lib/apt/lists/* \
- && pip install --no-cache-dir --break-system-packages umu-launcher \
  && mkdir -p /opt/steamcmd \
  && curl -fsSL "${STEAMCMD_URL}" | tar -xz -C /opt/steamcmd \
  && ln -s /opt/steamcmd/steamcmd.sh /usr/local/bin/steamcmd \
+ && mkdir -p /opt/protons \
+ && curl -fsSL "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/${GE_PROTON_VERSION}/${GE_PROTON_VERSION}-x86_64.tar.gz" \
+  | tar -xz -C /opt/protons \
  && mkdir -p /data "$HOME" /srv/stream /tmp/.X11-unix
 
 COPY scripts/entrypoint.sh scripts/install-vts.sh /usr/local/bin/

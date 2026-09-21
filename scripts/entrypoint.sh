@@ -39,8 +39,11 @@ fi
 
 VTS_EXE="$(cat /data/.vts-exe)"
 echo "[boot] launching VTube Studio: $VTS_EXE"
-export GAMEID="${GAMEID:-umu-1325860}"
-export PROTON_VERB="${PROTON_VERB:-waitforexitandrun}"
+export STEAM_COMPAT_DATA_PATH="${WINEPREFIX:-/data/prefix}"
+export STEAM_COMPAT_CLIENT_INSTALL_PATH="${STEAM_COMPAT_CLIENT_INSTALL_PATH:-/opt/steamcmd}"
 
-# Run in foreground so Docker sees the logs and the exit code.
-umu-run "$VTS_EXE"
+# Foreground: trap on EXIT/TERM cleans up Xvfb, ffmpeg and the web server.
+"${PROTONPATH:?PROTONPATH not set}/proton" run "$VTS_EXE" &
+PROTON_PID=$!
+PIDS="$PIDS $PROTON_PID"
+wait "$PROTON_PID"

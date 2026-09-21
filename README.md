@@ -16,8 +16,14 @@ Maple (the AI VTuber project next door) talks to this container to drive the ava
 
    ```bash
    cp .env.example .env
+   chmod 600 .env
    # edit .env: STEAM_USER, STEAM_PASS
    ```
+
+   Your password is only needed for the very first start. Steam remembers the
+   login inside the container's private volume afterwards, so delete
+   `STEAM_PASS` from `.env` after it works once — updates keep working
+   without it.
 
 2. Start it:
 
