@@ -10,31 +10,20 @@ Docker + Compose, a Steam account owning VTube Studio (free), ~10 GB free once.
 
 ## Quick start
 
-First, start everything. Nothing to type here:
+1. Start it:
+   ```bash
+   docker compose up -d --build
+   ```
 
-```bash
-docker compose up -d --build
-```
+2. Log into Steam (typed, never saved — be quick with Guard codes):
+   ```bash
+   docker exec -it vtube-studio install-vts.sh
+   ```
 
-Next, log into Steam once, inside the container:
-
-```bash
-docker exec -it vtube-studio install-vts.sh
-```
-
-It asks for your username and password right in the terminal — typed,
-never saved anywhere. If Steam wants a Guard code, grab it from your
-phone and be quick, codes die in ~30 seconds.
-
-Finally, restart so it boots fully:
-
-```bash
-docker compose restart
-```
-
-Give Proton a few minutes to warm up on the very first boot, then open
-`:8090` and watch. Later runs need nothing: just `docker compose up -d`.
-The logs print all three links (API, watch, remote control).
+3. Reboot and watch (`:8090`). First boot takes minutes, later runs just work:
+   ```bash
+   docker compose restart
+   ```
 
 Prefer a file over typing? `cp .env.example .env`, `chmod 600 .env`, fill it in. Never commit `.env`.
 
