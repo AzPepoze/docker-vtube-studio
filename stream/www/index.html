@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VTube Studio — live</title>
+<style>
+  body { margin: 0; background: #111; color: #eee; font-family: sans-serif;
+         display: flex; align-items: center; justify-content: center; height: 100vh; }
+  video { max-width: 100vw; max-height: 100vh; background: #000; }
+</style>
+</head>
+<body>
+<video id="v" controls autoplay muted playsinline></video>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<script>
+  var video = document.getElementById('v');
+  var src = 'stream.m3u8';
+  if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = src; // Safari plays HLS natively
+  } else if (window.Hls && Hls.isSupported()) {
+    var hls = new Hls();
+    hls.loadSource(src);
+    hls.attachMedia(video);
+  } else {
+    document.body.innerHTML = '<p>Open stream.m3u8 directly in a player (e.g. VLC).</p>';
+  }
+</script>
+</body>
+</html>

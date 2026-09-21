@@ -1,0 +1,33 @@
+name: vtuber-studio
+
+services:
+  vts:
+    build:
+      context: .
+      target: vts
+    image: vtuber-studio:latest
+    container_name: vtube-studio
+    ports:
+      # host side can move; inside the container VTS always listens on 8001
+      - "${VTS_PORT:-8001}:8001"
+      # watch page: paste this URL in any browser to see the avatar
+      - "${STREAM_PORT:-8080}:8080"
+    env_file:
+      - .env
+    volumes:
+      - vts-data:/data
+      # shared X display socket (lets the one-time setup container peek in)
+      - x11:/tmp/.X11-unix
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/8001' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+volumes:
+  vts-data:
+  x11:
