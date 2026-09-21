@@ -14,6 +14,9 @@ trap cleanup EXIT TERM INT
 mkdir -p /tmp/.X11-unix "$HOME"
 # `restart` reuses the container filesystem, so drop our own stale X lock.
 rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
+# Give openbox the empty menu file it keeps asking for (kills a startup warning).
+mkdir -p "$HOME/.config/openbox"
+[ -f "$HOME/.config/openbox/menu.xml" ] || printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<openbox_menu xmlns="http://openbox.org/3.4/menu">' '</openbox_menu>' > "$HOME/.config/openbox/menu.xml"
 
 echo "[boot] starting virtual display ${DISPLAY:-:99}..."
 # NOTE: background daemons get </dev/null so they can never steal keystrokes
@@ -44,6 +47,7 @@ if /usr/local/bin/install-vts.sh; then
   echo "[boot] launching VTube Studio: $VTS_EXE"
   export STEAM_COMPAT_DATA_PATH="${WINEPREFIX:-/data/prefix}"
   export STEAM_COMPAT_CLIENT_INSTALL_PATH="${STEAM_COMPAT_CLIENT_INSTALL_PATH:-/opt/steamcmd}"
+  mkdir -p "$STEAM_COMPAT_DATA_PATH"
 
   # Foreground: trap on EXIT/TERM cleans up Xvfb, ffmpeg and the web server.
   "${PROTONPATH:?PROTONPATH not set}/proton" run "$VTS_EXE" &
