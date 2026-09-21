@@ -50,7 +50,10 @@ if /usr/local/bin/install-vts.sh; then
   mkdir -p "$STEAM_COMPAT_DATA_PATH"
 
   # Foreground: trap on EXIT/TERM cleans up Xvfb, ffmpeg and the web server.
-  "${PROTONPATH:?PROTONPATH not set}/proton" run "$VTS_EXE" &
+  # VTS ships start_without_steam.bat (= exe -nosteam): without a running
+  # Steam client the Steamworks check fails and VTS quits after ~4s.
+  # -nosteam is the official way to run it standalone (API unaffected).
+  "${PROTONPATH:?PROTONPATH not set}/proton" run "$VTS_EXE" -nosteam &
   PROTON_PID=$!
   PIDS="$PIDS $PROTON_PID"
   wait "$PROTON_PID"
