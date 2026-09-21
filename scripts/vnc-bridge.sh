@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# Browser remote control for the main container's VTS desktop (shared via
-# /tmp/.X11-unix + network/IPC namespaces). Enabled with:
-#   docker compose --profile vnc up -d
-# Open the printed link, click what you need, then stop it:
-#   docker compose --profile vnc stop vnc
 set -euo pipefail
 
 PIDS=""

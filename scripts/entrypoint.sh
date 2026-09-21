@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Boot a virtual screen, make sure VTube Studio is installed, run it,
-# and publish the screen as an HLS watch page (paste-able URL, no VNC).
 set -euo pipefail
 
 PIDS=""
@@ -12,15 +10,11 @@ cleanup() {
 trap cleanup EXIT TERM INT
 
 mkdir -p /tmp/.X11-unix "$HOME"
-# `restart` reuses the container filesystem, so drop our own stale X lock.
 rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
-# Give openbox the empty menu file it keeps asking for (kills a startup warning).
 mkdir -p "$HOME/.config/openbox"
 [ -f "$HOME/.config/openbox/menu.xml" ] || printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<openbox_menu xmlns="http://openbox.org/3.4/menu">' '</openbox_menu>' > "$HOME/.config/openbox/menu.xml"
 
 echo "[boot] starting virtual display ${DISPLAY:-:99}..."
-# Small screen on purpose: llvmpipe renders on CPU, cost scales with pixels.
-# 640x360 is plenty for the watch page; raise via SCREEN_GEOM if you have cores to burn.
 SCREEN_GEOM="${SCREEN_GEOM:-640x360x24}"
 SCREEN_SIZE="${SCREEN_GEOM%x*}"
 Xvfb "${DISPLAY:-:99}" -screen 0 "$SCREEN_GEOM" </dev/null &
@@ -30,10 +24,6 @@ PIDS="$PIDS $!"
 
 if /usr/local/bin/install-vts.sh; then
 
-# Guarantee the VTS API server is on: fresh installs ship Config_StartAPI=false,
-# which means nothing answers on port 8001. Enforce every boot (idempotent).
-# Also cap llvmpipe render threads: without a GPU, VTS will happily eat every
-# core via software rendering. Override with LP_NUM_THREADS if you want more.
 export LP_NUM_THREADS="${LP_NUM_THREADS:-4}"
 python3 - "$VTS_DIR" <<'EOF'
 import json, sys
@@ -74,10 +64,6 @@ EOF
   export STEAM_COMPAT_CLIENT_INSTALL_PATH="${STEAM_COMPAT_CLIENT_INSTALL_PATH:-/opt/steamcmd}"
   mkdir -p "$STEAM_COMPAT_DATA_PATH"
 
-  # Foreground: trap on EXIT/TERM cleans up Xvfb, ffmpeg and the web server.
-  # VTS ships start_without_steam.bat (= exe -nosteam): without a running
-  # Steam client the Steamworks check fails and VTS quits after ~4s.
-  # -nosteam is the official way to run it standalone (API unaffected).
   "${PROTONPATH:?PROTONPATH not set}/proton" run "$VTS_EXE" -nosteam &
   PROTON_PID=$!
   PIDS="$PIDS $PROTON_PID"

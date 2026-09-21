@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Install / update VTube Studio (Steam AppID 1325860) into $VTS_DIR via steamcmd.
-# Idempotent: skips when the game exe already exists and VTS_UPDATE_ON_START=0.
 set -euo pipefail
 
 VTS_DIR="${VTS_DIR:-/data/vts}"
@@ -9,14 +7,11 @@ EXE_CACHE="${EXE_CACHE:-$(dirname "$VTS_DIR")/.vts-exe}"
 
 mkdir -p "$VTS_DIR" "$HOME"
 
-# Session cache: after the first login, steamcmd remembers the session in
-# /data/home, so credentials are never needed again — and never stored in a file.
 has_session() {
   ls "$HOME"/.steam/steam/config/loginusers.vdf >/dev/null 2>&1
 }
 
 ask() {
-  # $1 = var name, $2 = prompt, $3 = silent (1 = password)
   local var="$1" prompt="$2" silent="${3:-0}" val=""
   if [ -t 0 ]; then
     if [ "$silent" = "1" ]; then
@@ -38,7 +33,6 @@ find_exe() {
 
 if [ -n "$(find_exe)" ]; then
   if [ "${VTS_UPDATE_ON_START:-0}" = "0" ]; then
-    # Steady state: VTS is installed, skip Steam entirely — no login needed.
     FOUND="$(find_exe)"
     echo "[install] VTS already present, skipping update: $FOUND"
     echo "$FOUND" > "$EXE_CACHE"
@@ -49,7 +43,6 @@ fi
 
 echo "[install] fetching VTube Studio via steamcmd (app $APP_ID)..."
 if [ -z "${STEAM_USER:-}" ] && has_session; then
-  # Reuse the account name Steam cached last time — no typing needed.
   STEAM_USER="$(grep -o '"AccountName"[[:space:]]*"[^"]*"' "$HOME"/.steam/steam/config/loginusers.vdf 2>/dev/null | head -n 1 | cut -d'"' -f4)"
 fi
 if [ -z "${STEAM_USER:-}" ]; then

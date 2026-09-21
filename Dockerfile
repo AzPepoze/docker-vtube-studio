@@ -1,13 +1,7 @@
-# VTube Studio (Steam AppID 1325860) — slim API-only runtime.
-#
-# Debian slim + steamcmd + UMU/Proton + Xvfb + ffmpeg HLS stream.
-# No desktop, no audio, no GPU, no VNC in the main image.
-# Game data lives on /data (a volume), NOT in the image.
 
 ARG DEBIAN_CODENAME=trixie
 ARG GE_PROTON_VERSION=GE-Proton11-7
 
-# --- noVNC web client (setup target only, pinned) ---
 FROM debian:${DEBIAN_CODENAME}-slim AS novnc
 ARG NOVNC_VERSION=1.6.0
 RUN apt-get update \
@@ -17,7 +11,6 @@ RUN apt-get update \
   | tar -xz -C /opt \
  && mv "/opt/noVNC-${NOVNC_VERSION}" /opt/novnc
 
-# --- main runtime: VTS + HLS watch page ---
 FROM debian:${DEBIAN_CODENAME}-slim AS vts
 ARG STEAMCMD_URL=https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
 ARG GE_PROTON_VERSION
@@ -59,7 +52,6 @@ COPY stream/serve.py /usr/local/bin/serve.py
 COPY stream/www/ /srv/stream/
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/install-vts.sh /usr/local/bin/serve.py
 
-# 8001 = VTS API, 8080 = watch page (paste-able URL)
 EXPOSE 8001 8080
 VOLUME /data
 
@@ -68,8 +60,6 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=120s \
 
 ENTRYPOINT ["entrypoint.sh"]
 
-# --- vnc target: browser remote control for the main container's display.
-# Run it with: docker compose --profile vnc up -d (only when you need clicks).
 FROM vts AS vnc
 RUN apt-get update \
  && apt-get install -y --no-install-recommends x11vnc websockify \

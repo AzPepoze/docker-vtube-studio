@@ -17,7 +17,7 @@
   var video = document.getElementById('v');
   var src = 'stream.m3u8';
   if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = src; // Safari plays HLS natively
+    video.src = src;
   } else if (window.Hls && Hls.isSupported()) {
     var hls = new Hls();
     hls.loadSource(src);
