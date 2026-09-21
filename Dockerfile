@@ -45,7 +45,8 @@ RUN dpkg --add-architecture i386 \
  && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /opt/steamcmd \
  && curl -fsSL "${STEAMCMD_URL}" | tar -xz -C /opt/steamcmd \
- && ln -s /opt/steamcmd/steamcmd.sh /usr/local/bin/steamcmd \
+ && printf '#!/bin/sh\nexec /opt/steamcmd/steamcmd.sh "$@"\n' > /usr/local/bin/steamcmd \
+ && chmod +x /usr/local/bin/steamcmd \
  && mkdir -p /opt/protons \
  && curl -fsSL "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/${GE_PROTON_VERSION}/${GE_PROTON_VERSION}-x86_64.tar.gz" \
   | tar -xz -C /opt/protons \
