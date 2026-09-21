@@ -53,7 +53,7 @@ Set `VNC_PASSWORD` to lock it, `ENABLE_VNC=0` to turn it off.
 
 - `STREAM_FPS=60` — watch page frames per second. Lower = less CPU.
 - `SCREEN_GEOM=640x360x24` — virtual screen size. Smaller = much less CPU.
-- `LP_NUM_THREADS=4` — cap software-rendering threads.
+- `LP_NUM_THREADS=8` — cap software-rendering threads.
 - `PUBLIC_HOST=localhost` — host name used in the clickable log links.
   Set your LAN IP or domain if your browser is on another machine.
 
