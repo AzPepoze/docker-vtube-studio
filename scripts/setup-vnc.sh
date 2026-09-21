@@ -13,12 +13,12 @@ cleanup() {
 trap cleanup EXIT TERM INT
 
 if [ -n "${VNC_PASSWORD:-}" ]; then
-  x11vnc -display "${DISPLAY:-:99}" -forever -shared -rfbport 5900 -passwd "$VNC_PASSWORD" &
+  x11vnc -display "${DISPLAY:-:99}" -forever -shared -rfbport 5900 -passwd "$VNC_PASSWORD" </dev/null &
 else
-  x11vnc -display "${DISPLAY:-:99}" -forever -shared -rfbport 5900 &
+  x11vnc -display "${DISPLAY:-:99}" -forever -shared -rfbport 5900 </dev/null &
 fi
 PIDS="$PIDS $!"
-websockify --web /opt/novnc 6080 localhost:5900 &
+websockify --web /opt/novnc 6080 localhost:5900 </dev/null &
 PIDS="$PIDS $!"
 
 echo "[setup] browser access on :6080 — close this container when done."

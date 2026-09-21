@@ -14,16 +14,18 @@ trap cleanup EXIT TERM INT
 mkdir -p /tmp/.X11-unix "$HOME"
 
 echo "[boot] starting virtual display ${DISPLAY:-:99}..."
-Xvfb "${DISPLAY:-:99}" -screen 0 1280x720x24 &
+# NOTE: background daemons get </dev/null so they can never steal keystrokes
+# from the interactive Steam login prompt below.
+Xvfb "${DISPLAY:-:99}" -screen 0 1280x720x24 </dev/null &
 PIDS="$PIDS $!"
-openbox &
+openbox </dev/null 2>/dev/null &
 PIDS="$PIDS $!"
 
 /usr/local/bin/install-vts.sh
 
 if [ "${ENABLE_STREAM:-1}" = "1" ]; then
   echo "[boot] watch page on :${STREAM_PORT:-8080}"
-  STREAM_DIR="${STREAM_DIR:-/srv/stream}" STREAM_PORT="${STREAM_PORT:-8080}" /usr/local/bin/serve.py &
+  STREAM_DIR="${STREAM_DIR:-/srv/stream}" STREAM_PORT="${STREAM_PORT:-8080}" /usr/local/bin/serve.py </dev/null &
   PIDS="$PIDS $!"
   mkdir -p "${STREAM_DIR:-/srv/stream}"
   ffmpeg -hide_banner -loglevel warning \
@@ -31,7 +33,7 @@ if [ "${ENABLE_STREAM:-1}" = "1" ]; then
     -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -g 30 \
     -hls_time 2 -hls_list_size 6 -hls_flags delete_segments \
     -hls_segment_filename "${STREAM_DIR:-/srv/stream}/seg%03d.ts" \
-    "${STREAM_DIR:-/srv/stream}/stream.m3u8" &
+    "${STREAM_DIR:-/srv/stream}/stream.m3u8" </dev/null &
   PIDS="$PIDS $!"
 else
   echo "[boot] stream disabled (ENABLE_STREAM=0)"
