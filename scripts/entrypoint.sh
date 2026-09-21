@@ -19,9 +19,11 @@ mkdir -p "$HOME/.config/openbox"
 [ -f "$HOME/.config/openbox/menu.xml" ] || printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<openbox_menu xmlns="http://openbox.org/3.4/menu">' '</openbox_menu>' > "$HOME/.config/openbox/menu.xml"
 
 echo "[boot] starting virtual display ${DISPLAY:-:99}..."
-# NOTE: background daemons get </dev/null so they can never steal keystrokes
-# from the interactive Steam login prompt below.
-Xvfb "${DISPLAY:-:99}" -screen 0 1280x720x24 </dev/null &
+# Small screen on purpose: llvmpipe renders on CPU, cost scales with pixels.
+# 640x360 is plenty for the watch page; raise via SCREEN_GEOM if you have cores to burn.
+SCREEN_GEOM="${SCREEN_GEOM:-640x360x24}"
+SCREEN_SIZE="${SCREEN_GEOM%x*}"
+Xvfb "${DISPLAY:-:99}" -screen 0 "$SCREEN_GEOM" </dev/null &
 PIDS="$PIDS $!"
 openbox </dev/null 2>/dev/null &
 PIDS="$PIDS $!"
@@ -33,7 +35,7 @@ if /usr/local/bin/install-vts.sh; then
     PIDS="$PIDS $!"
     mkdir -p "${STREAM_DIR:-/srv/stream}"
     ffmpeg -hide_banner -loglevel warning \
-      -f x11grab -video_size 1280x720 -framerate 15 -i "${DISPLAY:-:99}" \
+      -f x11grab -video_size "${SCREEN_SIZE:-640x360}" -framerate 15 -i "${DISPLAY:-:99}" \
       -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -g 30 \
       -hls_time 2 -hls_list_size 6 -hls_flags delete_segments \
       -hls_segment_filename "${STREAM_DIR:-/srv/stream}/seg%03d.ts" \
