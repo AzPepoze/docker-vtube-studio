@@ -12,26 +12,22 @@ Maple (the AI VTuber project next door) talks to this container to drive the ava
 
 ## Quick start
 
-1. Copy the config and fill in your Steam login:
+1. Start it attached (so it can ask you things on the first run):
 
    ```bash
-   cp .env.example .env
-   chmod 600 .env
-   # edit .env: STEAM_USER, STEAM_PASS
+   docker compose up --build
    ```
 
-   Your password is only needed for the very first start. Steam remembers the
-   login inside the container's private volume afterwards, so delete
-   `STEAM_PASS` from `.env` after it works once — updates keep working
-   without it.
+   On the first run it asks for your Steam username + password **in the
+   terminal** — typed, never written to any file. If Steam wants a Guard
+   code, it asks for that too. Steam then remembers the login inside the
+   container's private volume, so all later runs need no input — just
+   `docker compose up -d`.
 
-2. Start it:
+   (If you'd rather use a file: `cp .env.example .env`, `chmod 600 .env`,
+   fill in the blanks. Never commit `.env`.)
 
-   ```bash
-   docker compose up -d --build
-   ```
-
-3. Watch it: open `http://your-server:8080` in any browser. That's the URL you share.
+2. Watch it: open `http://your-server:8080` in any browser. That's the URL you share.
 
 ## One-time setup (first run only)
 

@@ -3,18 +3,33 @@
 # Idempotent: skips when the game exe already exists and VTS_UPDATE_ON_START=0.
 set -euo pipefail
 
-: "${STEAM_USER:?Set STEAM_USER in .env (first run only needs STEAM_PASS too)}"
-
 VTS_DIR="${VTS_DIR:-/data/vts}"
 APP_ID="${VTS_APP_ID:-1325860}"
-EXE_CACHE="/data/.vts-exe"
+EXE_CACHE="${EXE_CACHE:-$(dirname "$VTS_DIR")/.vts-exe}"
 
 mkdir -p "$VTS_DIR" "$HOME"
 
-# Session cache: after the first login with a password, steamcmd remembers
-# the session in /data/home, so STEAM_PASS can be deleted from .env.
+# Session cache: after the first login, steamcmd remembers the session in
+# /data/home, so credentials are never needed again — and never stored in a file.
 has_session() {
   ls "$HOME"/.steam/steam/config/loginusers.vdf >/dev/null 2>&1
+}
+
+ask() {
+  # $1 = var name, $2 = prompt, $3 = silent (1 = password)
+  local var="$1" prompt="$2" silent="${3:-0}" val=""
+  if [ -t 0 ]; then
+    if [ "$silent" = "1" ]; then
+      read -rsp "$prompt" val && echo >&2
+    else
+      read -rp "$prompt" val
+    fi
+    printf -v "$var" '%s' "$val"
+  else
+    echo "[install] ERROR: $var is not set and there is no terminal to ask." >&2
+    echo "[install] Run once attached (docker compose up, without -d) or set $var in .env." >&2
+    exit 1
+  fi
 }
 
 find_exe() {
@@ -31,13 +46,18 @@ if [ "${VTS_UPDATE_ON_START:-1}" = "0" ]; then
 fi
 
 echo "[install] fetching VTube Studio via steamcmd (app $APP_ID)..."
-LOGIN_ARGS=("+login" "$STEAM_USER")
+if [ -z "${STEAM_USER:-}" ] && has_session; then
+  # Reuse the account name Steam cached last time — no typing needed.
+  STEAM_USER="$(grep -o '"AccountName"[[:space:]]*"[^"]*"' "$HOME"/.steam/steam/config/loginusers.vdf 2>/dev/null | head -n 1 | cut -d'"' -f4)"
+fi
+if [ -z "${STEAM_USER:-}" ]; then
+  ask STEAM_USER "[install] Steam username: "
+fi
+LOGIN_ARGS=("+login" "${STEAM_USER:-anonymous}")
 if [ -n "${STEAM_PASS:-}" ]; then
   LOGIN_ARGS+=("$STEAM_PASS")
-elif ! has_session; then
-  echo "[install] ERROR: no STEAM_PASS and no cached Steam session." >&2
-  echo "[install] Put STEAM_PASS in .env for this run only — it can be deleted afterwards." >&2
-  exit 1
+elif ! has_session && [ "${STEAM_USER:-}" != "anonymous" ]; then
+  ask STEAM_PASS "[install] Steam password (typed, never stored): " 1
 fi
 if [ -n "${STEAM_GUARD:-}" ]; then
   LOGIN_ARGS+=("$STEAM_GUARD")

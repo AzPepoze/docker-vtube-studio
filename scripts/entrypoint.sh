@@ -37,7 +37,7 @@ else
   echo "[boot] stream disabled (ENABLE_STREAM=0)"
 fi
 
-VTS_EXE="$(cat /data/.vts-exe)"
+VTS_EXE="$(cat "${EXE_CACHE:-$(dirname "${VTS_DIR:-/data/vts}")/.vts-exe}")"
 echo "[boot] launching VTube Studio: $VTS_EXE"
 export STEAM_COMPAT_DATA_PATH="${WINEPREFIX:-/data/prefix}"
 export STEAM_COMPAT_CLIENT_INSTALL_PATH="${STEAM_COMPAT_CLIENT_INSTALL_PATH:-/opt/steamcmd}"
