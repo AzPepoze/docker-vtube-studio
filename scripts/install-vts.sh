@@ -36,13 +36,15 @@ find_exe() {
   find "$VTS_DIR" -maxdepth 4 -iname 'vtube studio.exe' -o -iname 'vtubestudio.exe' 2>/dev/null | head -n 1
 }
 
-if [ "${VTS_UPDATE_ON_START:-1}" = "0" ]; then
-  FOUND="$(find_exe)"
-  if [ -n "$FOUND" ]; then
+if [ -n "$(find_exe)" ]; then
+  if [ "${VTS_UPDATE_ON_START:-0}" = "0" ]; then
+    # Steady state: VTS is installed, skip Steam entirely — no login needed.
+    FOUND="$(find_exe)"
     echo "[install] VTS already present, skipping update: $FOUND"
     echo "$FOUND" > "$EXE_CACHE"
     exit 0
   fi
+  echo "[install] VTS present, updating (VTS_UPDATE_ON_START=1)..."
 fi
 
 echo "[install] fetching VTube Studio via steamcmd (app $APP_ID)..."

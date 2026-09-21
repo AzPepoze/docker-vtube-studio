@@ -62,7 +62,15 @@ docker compose down       # stop
 docker compose logs -f    # watch logs
 ```
 
-VTube Studio updates itself on each start. The Docker image itself rarely needs rebuilding.
+Restarts reuse the installed game as-is (no Steam login, no waiting).
+The Docker image itself rarely needs rebuilding.
+
+To update VTube Studio itself later:
+
+```bash
+docker exec -it vtube-studio env VTS_UPDATE_ON_START=1 install-vts.sh
+docker compose restart
+```
 
 ## What's inside
 

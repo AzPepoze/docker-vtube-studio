@@ -12,6 +12,8 @@ cleanup() {
 trap cleanup EXIT TERM INT
 
 mkdir -p /tmp/.X11-unix "$HOME"
+# `restart` reuses the container filesystem, so drop our own stale X lock.
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
 
 echo "[boot] starting virtual display ${DISPLAY:-:99}..."
 # NOTE: background daemons get </dev/null so they can never steal keystrokes
