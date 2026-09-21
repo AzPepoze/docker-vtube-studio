@@ -13,7 +13,13 @@ services:
     build:
       context: .
       target: setup
+    # NOTE: the image inherits ENTRYPOINT ["entrypoint.sh"] from the vts
+    # stage — override it, this container only bridges VNC to the main
+    # container's display (shared via the x11 volume + network namespace).
+    entrypoint: ["/usr/local/bin/setup-vnc.sh"]
     network_mode: "service:vts"
+    depends_on:
+      - vts
     volumes:
       - x11:/tmp/.X11-unix
     env_file:
