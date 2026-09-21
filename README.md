@@ -33,12 +33,17 @@ The watch page is view-only. Open the `VNC:` link from the logs
 (`:6080/vnc.html`), click what you need, done.
 `VNC_PASSWORD` locks it, `ENABLE_VNC=0` turns it off.
 
-## Knobs (optional, `.env` or inline `KEY=value`)
+## Config (`.env` or inline `KEY=value`)
 
-- `STREAM_FPS=60` — stream frames per second. Lower = less CPU.
-- `SCREEN_GEOM=640x360x24` — virtual screen. Smaller = much less CPU.
-- `LP_NUM_THREADS=8` — software-rendering threads.
-- `PUBLIC_HOST=localhost` — host shown in the log links. Set your LAN IP or domain if your browser is elsewhere.
+| Key | Default | Effect |
+| --- | --- | --- |
+| `STREAM_FPS` | `60` | Stream frames per second. Lower = less CPU. |
+| `SCREEN_GEOM` | `640x360x24` | Virtual screen. Smaller = much less CPU. |
+| `LP_NUM_THREADS` | `8` | Software-rendering threads. |
+| `PUBLIC_HOST` | `localhost` | Host shown in the log links. |
+| `ENABLE_VNC` | `1` | `0` turns remote control off. |
+| `VNC_PASSWORD` | _(empty)_ | Locks remote control. |
+| `VTS_PORT` / `STREAM_PORT` | `8001` / `8090` | Host-side ports. |
 
 ## Updating VTube Studio later
 
